@@ -1,0 +1,46 @@
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style> 
+
+<h3>Tweets by {{handle}}</h3>
+{% if tweet_list %}
+<table>
+    <th>Tweet</th>
+    {% for tweet in tweet_list %}
+        <tr> <td>{{ tweet}}</td> </tr>
+    {% endfor %}
+</table>
+{% else %}
+    <p>No tweets are available.</p>
+{% endif %}
+
+<h3>Most common hashtags</h3>
+<table>
+    <tr>
+        <th>Hashtag</th>
+        <th>Frequency</th>
+    </tr>
+    {% for word in most_common_hashtags %}
+        <tr> 
+            <td>{{ word.0}}</td> 
+            <td>{{ word.1}}</td> 
+        </tr>
+    {% endfor %}
+</table>
+
+<h3>Most common words</h3>
+<table>
+    <tr>
+        <th>Word</th>
+        <th>Frequency</th>
+    </tr>
+    {% for word in most_common_words %}
+        <tr> 
+            <td>{{ word.0}}</td> 
+            <td>{{ word.1}}</td> 
+        </tr>
+    {% endfor %}
+</table>
