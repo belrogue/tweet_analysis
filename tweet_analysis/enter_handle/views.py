@@ -11,8 +11,6 @@ import pandas as pd
 
 from string import punctuation
 
-#from nltk.book import *
-
 def normalization(word_list):
         lem = nltk.WordNetLemmatizer()
         normalized_word = []
@@ -32,50 +30,60 @@ def get_handle(request):
         # check whether it's valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required
-            # ...
-            # redirect to a new URL:
+            # For now, we use the twitter "userid" instead of
+            ## the twitter handle. User ID to Handle conversions can
+            ## be done at https://tweeterid.com/
+
             handle = int(form.cleaned_data['handle'])
 
-            # tweet_list
+            # Use a sample from the Twitter corpus
             input_file = twitter_samples.abspath("tweets.20150430-223406.json")
 
+            # Convert the relevant fields in the json to a CSV text file
             with open(input_file) as fp:
                 json2csv(fp, 'tweets_text.csv',
                         ['created_at', 'favorite_count', 'id', 'in_reply_to_status_id', 
                         'in_reply_to_user_id', 'retweet_count', 'retweeted', 
                         'text', 'truncated', 'user.id'])
 
+            # Read the CSV into a Pandas dataframe
             tweets = pd.read_csv('tweets_text.csv', index_col=2, header=0, encoding="utf8")
 
             # nltk stuff
-#            tweets = tweets.head(300)
+
+            # Only look at tweets from a specific user
             tweets = tweets.loc[tweets['user.id'] == handle]['text']
-#            tweets = tweets['text']
-#            tweets = tweets['user_id']
             
+            # Convert the tweets into a text string.
             raw_text1 = ""
             for tweet in tweets:
-                raw_text1 = raw_text1 + tweet
+                raw_text1 = raw_text1 + tweet + "\n"
             
+            # Tokenize the tweets into separate words, hashtags etc.
             tknzr = TweetTokenizer()
             text1 = nltk.Text(tknzr.tokenize(raw_text1))
             
+            # Stopwords are common English words which are to be ignored
             stopwords = nltk.corpus.stopwords.words('english')
             stopwords.append('…')
             stopwords.append('rt')
             stopwords.append('')
             
+            # Lemmatize the text
             nom_text1 = normalization(text1)
             
+            # Strip punctuation and stopwords, and compute a frequency distribution of all the words.
             allWordExceptStopDistAndNoms = nltk.FreqDist(
                     w.lower().rstrip(punctuation) 
                     for w in nom_text1 if 
                     w[0] != '#' and w.lower() not in stopwords 
                     and len(w) > 1)
             
+            # Hashtags are just words which start with "#'
             all_hashtags = nltk.FreqDist(w.lower().rstrip(punctuation) for w in text1 if w.lower() not in stopwords and w[0] == '#')
 
             # back to Django
+            # bundle all the data into a "context" to send
             context = {'handle': str(handle), 
                     'tweet_list': tweets.tolist(), 
                     'most_common_hashtags': all_hashtags.most_common(10),
